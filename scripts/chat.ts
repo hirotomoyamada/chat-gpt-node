@@ -47,7 +47,6 @@ const chatCompletion = async (content: string) => {
     const parameters: CreateChatCompletionRequest = {
       model,
       messages,
-      max_tokens: 2048,
       temperature: 1,
       top_p: 1,
       presence_penalty: 0,
