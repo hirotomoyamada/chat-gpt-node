@@ -35,5 +35,5 @@ $ pnpm setting -p
 $ pnpm reset
 
 # Reset data for currently held all messages
-$ pnpm setting -a
+$ pnpm reset -a
 ```
