@@ -5,7 +5,7 @@ const fetch = async () => {
   const spinner = ora('Getting model for ChatGPT').start()
 
   try {
-    const { data } = await openai.listEngines()
+    const { data } = await openai.listModels()
 
     spinner.succeed('Got model')
 
