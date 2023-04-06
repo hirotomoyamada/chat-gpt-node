@@ -1,27 +1,27 @@
-import ora from 'ora';
-import { openai } from '../libs/openai';
+import ora from 'ora'
+import { openai } from '../libs/openai'
 
 const fetch = async () => {
-  const spinner = ora('Getting model for ChatGPT').start();
+  const spinner = ora('Getting model for ChatGPT').start()
 
   try {
-    const { data } = await openai.listEngines();
+    const { data } = await openai.listEngines()
 
-    spinner.succeed('Got model');
+    spinner.succeed('Got model')
 
-    const models = data.data.map(({ id }) => id);
+    const models = data.data.map(({ id }) => id)
     const result = `\n${models
-      .map((model, i) => `${i + 1}. ${model}`)
-      .join('\n')}\n`;
+      .map((model, i) => `${(i + 1).toString().padStart(2, '0')}. ${model}`)
+      .join('\n')}\n`
 
-    console.log(result);
+    console.log(result)
   } catch (e) {
-    spinner.fail('An error occurred');
+    spinner.fail('An error occurred')
 
-    console.error(e.message);
+    console.error(e.message)
   } finally {
-    spinner.stop();
+    spinner.stop()
   }
-};
+}
 
-fetch();
+fetch()
