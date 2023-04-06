@@ -173,23 +173,23 @@ const parametersReadline = async () => {
   try {
     parameterQuestion(
       max_tokens_query,
-      (n) => (max_tokens = n !== '-1' ? parseInt(n ?? max_tokens) : undefined),
+      (n) => (max_tokens = n !== '-1' ? parseFloat(n ?? max_tokens) : undefined),
       () =>
         parameterQuestion(
           temperature_query,
-          (n) => (temperature = parseInt(n ?? temperature)),
+          (n) => (temperature = parseFloat(n ?? temperature)),
           () =>
             parameterQuestion(
               top_p_query,
-              (n) => (top_p = parseInt(n ?? top_p)),
+              (n) => (top_p = parseFloat(n ?? top_p)),
               () =>
                 parameterQuestion(
                   presence_penalty_query,
-                  (n) => (presence_penalty = parseInt(n ?? presence_penalty)),
+                  (n) => (presence_penalty = parseFloat(n ?? presence_penalty)),
                   () =>
                     parameterQuestion(
                       frequency_penalty_query,
-                      (n) => (frequency_penalty = parseInt(n ?? frequency_penalty)),
+                      (n) => (frequency_penalty = parseFloat(n ?? frequency_penalty)),
                       async () => {
                         rl.close()
 
