@@ -9,7 +9,7 @@ import { typingEffect } from '../libs/utils'
 dotenv.config()
 
 const JSON_PARAMS: Omit<CreateChatCompletionRequest, 'messages' | 'model'> = existsJson(
-  'perameters',
+  'parameters',
 )
   ? readJson('parameters')
   : {}
