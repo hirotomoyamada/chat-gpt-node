@@ -8,7 +8,6 @@ json
 
 # dotenv
 .env
-.env.*
 
 # misc
 .DS_Store
