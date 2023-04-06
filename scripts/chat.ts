@@ -26,7 +26,7 @@ const startReadline = async () => {
 
     const res = await chatCompletion(req)
 
-    await typingEffect('\n' + res + '\n\n')
+    await typingEffect(res + '\n\n')
 
     rl.prompt()
 
@@ -35,6 +35,8 @@ const startReadline = async () => {
 }
 
 const chatCompletion = async (content: string) => {
+  console.log('')
+
   const spinner = ora('...').start()
 
   let messages: ChatCompletionRequestMessage[] = readJson('messages')
@@ -45,7 +47,7 @@ const chatCompletion = async (content: string) => {
     const parameters: CreateChatCompletionRequest = {
       model,
       messages,
-      max_tokens: 2049,
+      max_tokens: 2048,
       temperature: 1,
       top_p: 1,
       presence_penalty: 0,

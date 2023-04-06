@@ -147,7 +147,7 @@ const parametersReadline = async () => {
 
   if (existsJson('parameters')) parameters = readJson('parameters')
 
-  let max_tokens = parameters['max_tokens'] ?? 2049
+  let max_tokens = parameters['max_tokens'] ?? 2048
   let temperature = parameters['temperature'] ?? 1
   let top_p = parameters['top_p'] ?? 1
   let presence_penalty = parameters['presence_penalty'] ?? 0
