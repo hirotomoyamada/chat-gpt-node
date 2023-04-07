@@ -6,13 +6,9 @@ import { CreateChatCompletionRequest, ChatCompletionRequestMessage } from 'opena
 import { writeJson, readJson, existsJson } from '../../libs/json'
 import { typingEffect } from '../../libs/utils'
 
-dotenv.config()
+let JSON_PARAMS: Omit<CreateChatCompletionRequest, 'messages' | 'model'> = {}
 
-const JSON_PARAMS: Omit<CreateChatCompletionRequest, 'messages' | 'model'> = existsJson(
-  'parameters',
-)
-  ? readJson('parameters')
-  : {}
+if (existsJson('parameters')) JSON_PARAMS = readJson('parameters')
 
 delete JSON_PARAMS['messages']
 

@@ -1,5 +1,6 @@
 import ora from 'ora'
-import { openai } from '../libs/openai'
+import { openai } from '../../libs/openai'
+import { red } from 'chalk'
 
 const fetch = async () => {
   const spinner = ora('Getting model for ChatGPT').start()
@@ -16,9 +17,9 @@ const fetch = async () => {
 
     console.log(result)
   } catch (e) {
-    spinner.fail('An error occurred')
+    spinner.fail(red('An error occurred'))
 
-    console.error(e.message)
+    console.error(red(e.message))
   } finally {
     spinner.stop()
   }
