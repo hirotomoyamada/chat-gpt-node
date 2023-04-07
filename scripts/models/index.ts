@@ -2,15 +2,18 @@ import ora from 'ora'
 import { openai } from '../../libs/openai'
 import { red } from 'chalk'
 
-const fetch = async () => {
-  const spinner = ora('Getting model for ChatGPT').start()
+const fetchModels = async () => {
+  const spinner = ora('Getting models for ChatGPT').start()
 
   try {
+    let models: string[] = []
+
     const { data } = await openai.listModels()
 
-    spinner.succeed('Got model')
+    spinner.succeed('Got models')
 
-    const models = data.data.map(({ id }) => id)
+    models = data.data.map(({ id }) => id)
+
     const result = `\n${models
       .map((model, i) => `${(i + 1).toString().padStart(2, '0')}. ${model}`)
       .join('\n')}\n`
@@ -25,4 +28,4 @@ const fetch = async () => {
   }
 }
 
-fetch()
+fetchModels()
