@@ -29,4 +29,5 @@ export const readJson = (name: string): any => {
     throw new Error(e.message)
   }
 }
+
 export const existsJson = (name: string): boolean => existsSync(JSON_FILE_PATH(name))
