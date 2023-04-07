@@ -17,7 +17,7 @@ $ pnpm chat
 
 ```sh
 # Gets list of currently available models.
-$ pnpm model
+$ pnpm models
 
 # Start a chat.
 $ pnpm chat
