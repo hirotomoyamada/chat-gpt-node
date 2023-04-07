@@ -16,26 +16,27 @@ const model = process.argv[2] ?? JSON_PARAMS['model']
 
 const main = async () => {
   try {
-    const messages: ChatCompletionRequestMessage[] = [
-      { role: 'user', content: 'こんにちは' },
-      { role: 'assistant', content: 'こんにちは' },
-      { role: 'user', content: 'こんにちは' },
-    ]
+    const messages: ChatCompletionRequestMessage[] = [{ role: 'user', content: '' }]
 
-    const { data } = await openai.createChatCompletion({
-      model,
-      messages,
-      temperature: 1,
-      top_p: 1,
-      presence_penalty: 0,
-      frequency_penalty: 0,
-      ...JSON_PARAMS,
-    })
+    // const { data } = await openai.createChatCompletion({
+    //   model,
+    //   messages,
+    //   temperature: 1,
+    //   top_p: 1,
+    //   presence_penalty: 0,
+    //   frequency_penalty: 0,
+    //   ...JSON_PARAMS,
+    // })
     // console.log(data)
 
-    // const { data } = await openai.listModels()
+    // const { data: modelsData } = await openai.listModels()
+    const { data: modelData } = await openai.retrieveModel('code-davinci-002')
 
-    console.log(data.usage, data.choices[0])
+    // console.log(modelsData)
+
+    // console.log('-------------')
+
+    console.log(modelData)
   } catch (e) {
     console.log(e.message ?? e.response.data.error)
   }
