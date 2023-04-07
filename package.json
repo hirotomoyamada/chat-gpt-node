@@ -8,10 +8,11 @@
   "author": "hirotomoyamada <hirotomo.yamada@avap.co.jp>",
   "scripts": {
     "format": "prettier --write .",
-    "setting": "tsx scripts/setting.ts",
-    "chat": "tsx scripts/chat.ts",
-    "model": "tsx scripts/model.ts",
-    "reset": "tsx scripts/reset.ts"
+    "setting": "tsx scripts/setting",
+    "chat": "tsx scripts/chat",
+    "model": "tsx scripts/model",
+    "reset": "tsx scripts/reset",
+    "test": "tsx scripts/test"
   },
   "dependencies": {
     "@types/node": "^18.15.11",
