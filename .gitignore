@@ -4,7 +4,8 @@ node-jiti
 
 # dependencies
 node_modules
-json
+json/messages.json
+json/parameters.json
 
 # dotenv
 .env
