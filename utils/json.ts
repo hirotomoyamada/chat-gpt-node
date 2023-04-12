@@ -1,7 +1,7 @@
 import * as path from 'path'
 import { writeFile, readFileSync, existsSync, mkdirSync } from 'fs'
 import { promisify } from 'util'
-import { prettier } from './prettier'
+import { prettier } from '../libs/prettier'
 
 const writeFileAsync = promisify(writeFile)
 

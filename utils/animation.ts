@@ -1,3 +1,5 @@
+import { wait } from './sync'
+
 export const typingEffect = async (text: string) => {
   for (const char of text) {
     process.stdout.write(char)
@@ -7,5 +9,3 @@ export const typingEffect = async (text: string) => {
     await wait(n)
   }
 }
-
-export const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
