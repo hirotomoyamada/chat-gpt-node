@@ -1,5 +1,8 @@
-export const computedCommnad = (commands: string[]): Record<string, boolean> => {
-  let args = process.argv.slice(2)
+export const computedCommnad = (
+  commands: string[],
+  internalArgs?: string[],
+): Record<string, boolean> => {
+  let args = internalArgs ?? process.argv.slice(2)
 
   args = args.reduce((prev, current) => {
     const [, value] = current.match(/^-([^\-]*)/) ?? []
