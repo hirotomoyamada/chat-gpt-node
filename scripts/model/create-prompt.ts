@@ -1,7 +1,7 @@
 import { green } from 'chalk'
 import { ChatCompletionRequestMessage } from 'openai'
 import { prompt } from '../../libs/inquirer'
-import readline from 'readline'
+import * as readline from 'readline'
 
 export const createPrompt = async (
   messages: ChatCompletionRequestMessage[] = [],
