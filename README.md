@@ -3,7 +3,7 @@
 ## Install
 
 ```sh
-$ node -v → v16.**.*
+$ node -v → v18.**.*
 $ pnpm install
 ```
 
