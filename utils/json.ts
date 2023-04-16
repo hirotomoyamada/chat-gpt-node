@@ -1,5 +1,5 @@
 import * as path from 'path'
-import { writeFile, readFileSync, existsSync, mkdirSync } from 'fs'
+import { writeFile, readFileSync, existsSync, mkdirSync, unlinkSync } from 'fs'
 import { promisify } from 'util'
 import { prettier } from '../libs/prettier'
 
@@ -25,6 +25,16 @@ export const writeJson =
       throw new Error(e.message)
     }
   }
+
+export const deleteJson = (...pathName: string[]) => {
+  try {
+    if (existsSync(JSON_FILE_PATH(...pathName))) {
+      unlinkSync(JSON_FILE_PATH(...pathName))
+    }
+  } catch (e) {
+    throw new Error(e.message)
+  }
+}
 
 export const readJson = (...pathName: string[]): any => {
   try {

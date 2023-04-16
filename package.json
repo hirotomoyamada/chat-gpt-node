@@ -10,7 +10,8 @@
     "format": "prettier --write .",
     "chat": "tsx scripts/chat",
     "model": "tsx scripts/model",
-    "models": "tsx scripts/models"
+    "models": "tsx scripts/models",
+    "history": "tsx scripts/history"
   },
   "dependencies": {
     "chalk": "4.1.2",

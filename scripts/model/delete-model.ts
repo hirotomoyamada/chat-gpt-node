@@ -1,4 +1,4 @@
-import { existsJson, readJson } from '../../utils/json'
+import { existsJson, readJson, deleteJson } from '../../utils/json'
 import { DefinedModel } from '../../types/openai'
 import { prompt } from '../../libs/inquirer'
 import { writeModels } from './write-models'
@@ -54,6 +54,8 @@ export const deleteModel = async () => {
       if (!targetModel) throw new Error(`${targetId} does not exist.`)
 
       models = models.filter(({ id }) => id !== targetId)
+
+      deleteJson('data', 'history', targetId)
     }
 
     await writeModels(models)
