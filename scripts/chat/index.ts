@@ -20,6 +20,8 @@ const selectModel = async () => {
     choices: models.map(({ id }) => id),
   })
 
+  console.log('')
+
   return models.find(({ id }) => id === targetId)
 }
 
