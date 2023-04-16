@@ -1,61 +1,60 @@
 import { green } from 'chalk'
-import { ChatCompletionRequestMessage } from 'openai'
 import { prompt } from '../../libs/inquirer'
 import * as readline from 'readline'
 
-export const createPrompt = async (
-  messages: ChatCompletionRequestMessage[] = [],
-): Promise<ChatCompletionRequestMessage[]> =>
+export const createPrompt = async (promptTemplate: string = ''): Promise<string> =>
   new Promise(async (resolve) => {
-    if (messages.length) {
-      const { isOverwrite } = await prompt({
+    let isOverwrite = false
+
+    if (promptTemplate) {
+      const result = await prompt({
         type: 'confirm',
         name: 'isOverwrite',
         message: 'Would you like to overwrite the existing prompt?',
         default: false,
       })
 
-      if (isOverwrite) messages = []
-
       console.log('')
-    }
 
-    console.log(
-      'Please enter the prompt to be set for the model.\n\nTo save, please type "exit". To reset, please type "reset"\n',
-    )
+      isOverwrite = result.isOverwrite
+    }
 
     const rl = readline.createInterface({
       input: process.stdin,
       output: process.stdout,
     })
 
+    console.log(
+      'Please enter the prompt to be set for the model.\n\nTo save, please type "exit".\n',
+    )
+
     rl.setPrompt('> ')
+
+    if (isOverwrite) {
+      promptTemplate = ''
+    } else {
+      const lines = promptTemplate.split('\n')
+
+      lines.forEach((line, i) => {
+        const isLast = i + 1 === lines.length
+
+        if (!isLast || line) console.log('> ' + line)
+      })
+    }
 
     rl.prompt()
 
-    let newMessages: ChatCompletionRequestMessage[] = []
-
-    rl.on('line', async (content) => {
+    rl.on('line', async (input) => {
       rl.pause()
 
-      if (content === 'exit') {
+      if (input === 'exit') {
         console.log(green('\n✔ Prompt has been saved.\n'))
 
         rl.close()
 
-        resolve([...messages, ...newMessages])
-      } else if (content === 'reset') {
-        newMessages = []
-
-        console.log(green('\n✔ Prompt has been reset.\n'))
-
-        rl.prompt()
-
-        rl.resume()
+        resolve(promptTemplate)
       } else {
-        newMessages = [...newMessages, { role: 'system', content }]
-
-        console.log(green('\n✔ Prompt has been set.\n'))
+        promptTemplate += input + '\n'
 
         rl.prompt()
 

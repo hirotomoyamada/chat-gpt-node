@@ -1,19 +1,64 @@
-import { rl } from '../../libs/readline'
-import { writeJson, existsJson } from '../../libs/json'
-import { startReadline } from './start-readline'
-import { fetchModel } from './fetch-model'
+import { computedCommnad, pkgManagerName } from '../../utils/command'
+import { existsJson, readJson } from '../../utils/json'
+import { DefinedModel } from '../../types/openai'
+import { red } from 'chalk'
+import { prompt } from '../../libs/inquirer'
+import { createChat } from './create-chat'
+
+const models: DefinedModel[] = existsJson('data', 'models') ? readJson('data', 'models') : []
+
+const hasModels: boolean = !!models.length
+
+let model = models.find(({ isDefault }) => isDefault)
+
+const selectModel = async () => {
+  const { targetId } = await prompt({
+    type: 'list',
+    name: 'targetId',
+    message: 'Please select the model',
+    suffix: ':',
+    choices: models.map(({ id }) => id),
+  })
+
+  return models.find(({ id }) => id === targetId)
+}
 
 const main = async () => {
-  const isSuccessfully = await fetchModel()
+  try {
+    const { select } = computedCommnad(['select'])
 
-  if (isSuccessfully) {
-    if (!existsJson('messages')) writeJson('messages', [])
+    const targetId = process.argv[2]
 
-    startReadline()
-  } else {
-    rl.setPrompt('')
-    rl.write(null, { ctrl: true, name: 'u' })
-    rl.close()
+    if (hasModels) {
+      if (select) {
+        model = await selectModel()
+
+        createChat(model)
+      } else {
+        if (targetId) {
+          model = models.find(({ id }) => id === targetId)
+
+          if (!model)
+            throw new Error(
+              `Model does not exist. Please run "${pkgManagerName} model --create" to create the model.`,
+            )
+
+          createChat(model)
+        } else if (model) {
+          createChat(model)
+        } else {
+          model = await selectModel()
+
+          createChat(model)
+        }
+      }
+    } else {
+      throw new Error(
+        `Model does not exist. Please run "${pkgManagerName} model --create" to create the model.`,
+      )
+    }
+  } catch (e) {
+    console.log(red(e.message + '\n'))
   }
 }
 

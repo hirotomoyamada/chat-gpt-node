@@ -1,3 +1,10 @@
+import dotenv from 'dotenv'
+
+dotenv.config()
+
+const findCommand = (commands: string[]) => (value: string) =>
+  commands.find((command) => command.startsWith(value))
+
 export const computedCommnad = <T extends string>(commands: T[]): Record<T, boolean> => {
   let args = process.argv.slice(2)
 
@@ -35,5 +42,14 @@ export const computedCommnad = <T extends string>(commands: T[]): Record<T, bool
   }, {} as Record<string, boolean>)
 }
 
-export const findCommand = (commands: string[]) => (value: string) =>
-  commands.find((command) => command.startsWith(value))
+const fetchPkgManagerName = () => {
+  const { npm_config_user_agent, MODULE_NAME } = process.env
+
+  const [pkgManager] = npm_config_user_agent.split(' ')
+
+  const [pkgManagerName] = pkgManager.split('/')
+
+  return MODULE_NAME ?? pkgManagerName
+}
+
+export const pkgManagerName = fetchPkgManagerName()

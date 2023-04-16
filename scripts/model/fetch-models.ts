@@ -1,5 +1,5 @@
 import ora from 'ora'
-import { InternalModel } from '../../types/model'
+import { InternalModel } from '../../types/openai'
 import { readJson } from '../../utils/json'
 import { red, green, dim } from 'chalk'
 import { openai } from '../../libs/openai'

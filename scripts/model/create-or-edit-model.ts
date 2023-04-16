@@ -1,25 +1,26 @@
 import { existsJson, readJson } from '../../utils/json'
 import { red, dim } from 'chalk'
-import { DefinedModel } from '../../types/model'
+import { DefinedModel } from '../../types/openai'
 import { fetchModels } from './fetch-models'
 import { prompt } from '../../libs/inquirer'
 import { testingChat } from './testing-chat'
 import { writeModels } from './write-models'
 import { DistinctQuestion } from 'inquirer'
 import { createPrompt } from './create-prompt'
+import { pkgManagerName } from '../../utils/command'
 
-let definedModels: DefinedModel[] = existsJson('data', 'models') ? readJson('data', 'models') : []
+let models: DefinedModel[] = existsJson('data', 'models') ? readJson('data', 'models') : []
 
-const hasDefinedModels: boolean = !!definedModels.length
+const hasModels: boolean = !!models.length
 
 export const createOrEditModel = async (isEdit: boolean, isPrompt: boolean) => {
   try {
     let model: DefinedModel | undefined = undefined
 
     if (isEdit || isPrompt) {
-      if (!hasDefinedModels)
+      if (!hasModels)
         throw new Error(
-          'Model does not exist. Please run "pnpm model --create" to create the model.',
+          `Model does not exist. Please run "${pkgManagerName} model --create" to create the model.`,
         )
 
       let targetId = process.argv[3]
@@ -30,7 +31,7 @@ export const createOrEditModel = async (isEdit: boolean, isPrompt: boolean) => {
           name: 'targetId',
           message: 'Please select the model to edit',
           suffix: ':',
-          choices: definedModels.map(({ id }) => id),
+          choices: models.map(({ id }) => id),
         })
 
         targetId = answerTargetId
@@ -38,11 +39,11 @@ export const createOrEditModel = async (isEdit: boolean, isPrompt: boolean) => {
         console.log('')
       }
 
-      const targetModel = definedModels.find(({ id }) => id === targetId)
+      const targetModel = models.find(({ id }) => id === targetId)
 
       if (!targetModel)
         throw new Error(
-          'Model does not exist. Please run "pnpm model --create" to create the model.',
+          `Model does not exist. Please run "${pkgManagerName} model --create" to create the model.`,
         )
 
       model = targetModel
@@ -52,7 +53,7 @@ export const createOrEditModel = async (isEdit: boolean, isPrompt: boolean) => {
       const internalModels = await fetchModels()
 
       const getMaxTokens = (selectedModelName: string) =>
-        internalModels.find(({ id }) => id === selectedModelName)?.max_tokens ?? 0
+        internalModels.find(({ id }) => id === selectedModelName)?.maxTokens ?? 0
 
       console.log('\nPlease enter the model name and parameters.\n')
 
@@ -67,7 +68,7 @@ export const createOrEditModel = async (isEdit: boolean, isPrompt: boolean) => {
             if (!input) {
               return red('name is required.')
             } else {
-              if (input !== model?.id && definedModels.some(({ id }) => id === input)) {
+              if (input !== model?.id && models.some(({ id }) => id === input)) {
                 return red(`${input} is duplicated.`)
               } else {
                 return true
@@ -77,20 +78,20 @@ export const createOrEditModel = async (isEdit: boolean, isPrompt: boolean) => {
         },
         {
           type: 'list',
-          name: 'parameters.model',
+          name: 'parameters.modelName',
           message: 'model',
           suffix: ':',
-          default: model?.parameters.model,
+          default: model?.parameters.modelName,
           choices: internalModels.map(({ id }) => id),
         },
         {
           type: 'input',
-          name: 'parameters.max_tokens',
+          name: 'parameters.maxTokens',
           message: ({ parameters }) =>
-            `max_tokens ${dim(`(min: 1, max: ${getMaxTokens(parameters.model)})`)}`,
+            `max_tokens ${dim(`(min: 1, max: ${getMaxTokens(parameters.modelName)})`)}`,
           suffix: ':',
           default: ({ parameters }) =>
-            model?.parameters.max_tokens ?? getMaxTokens(parameters.model) / 4,
+            model?.parameters.maxTokens ?? getMaxTokens(parameters.modelName) / 4,
           validate: (input, { parameters }) => {
             input = parseFloat(input)
 
@@ -99,7 +100,7 @@ export const createOrEditModel = async (isEdit: boolean, isPrompt: boolean) => {
             } else {
               if (input < 1) return 'Please enter a value greater than or equal to 1.'
 
-              const maxTokens = getMaxTokens(parameters.model)
+              const maxTokens = getMaxTokens(parameters.modelName)
 
               if (maxTokens < input) {
                 return `The maximum value that can be entered is ${maxTokens}.`
@@ -131,10 +132,10 @@ export const createOrEditModel = async (isEdit: boolean, isPrompt: boolean) => {
         },
         {
           type: 'input',
-          name: 'parameters.top_p',
+          name: 'parameters.topP',
           message: `top_p ${dim(`(min: 0, max: 1)`)}`,
           suffix: ':',
-          default: model?.parameters.top_p ?? 1,
+          default: model?.parameters.topP ?? 1,
           validate: (input) => {
             input = parseFloat(input)
 
@@ -151,10 +152,10 @@ export const createOrEditModel = async (isEdit: boolean, isPrompt: boolean) => {
         },
         {
           type: 'input',
-          name: 'parameters.presence_penalty',
+          name: 'parameters.presencePenalty',
           message: `presence_penalty ${dim(`(min: -2, max: 2)`)}`,
           suffix: ':',
-          default: model?.parameters.presence_penalty ?? 0,
+          default: model?.parameters.presencePenalty ?? 0,
           validate: (input) => {
             input = parseFloat(input)
 
@@ -171,10 +172,10 @@ export const createOrEditModel = async (isEdit: boolean, isPrompt: boolean) => {
         },
         {
           type: 'input',
-          name: 'parameters.frequency_penalty',
+          name: 'parameters.frequencyPenalty',
           message: `frequency_penalty ${dim(`(min: -2, max: 2)`)}`,
           suffix: ':',
-          default: model?.parameters.frequency_penalty ?? 0,
+          default: model?.parameters.frequencyPenalty ?? 0,
           validate: (input) => {
             input = parseFloat(input)
 
@@ -189,9 +190,27 @@ export const createOrEditModel = async (isEdit: boolean, isPrompt: boolean) => {
             }
           },
         },
+        {
+          type: 'input',
+          name: 'k',
+          message: `history_limit ${dim(`(min: 1, max: 99999)`)}`,
+          suffix: ':',
+          default: model?.k ?? 10,
+          validate: (input) => {
+            input = parseFloat(input)
+
+            if (isNaN(input)) {
+              return 'Please input a number value.'
+            } else {
+              if (input < 1) return 'Please enter a value greater than or equal to 1.'
+
+              return true
+            }
+          },
+        },
       ]
 
-      if (hasDefinedModels && !model?.isDefault) {
+      if (hasModels && !model?.isDefault) {
         questions = [
           ...questions,
           {
@@ -203,7 +222,7 @@ export const createOrEditModel = async (isEdit: boolean, isPrompt: boolean) => {
         ]
       }
 
-      let { id, parameters, isDefault } = await prompt(questions)
+      let { id, parameters, isDefault, k } = await prompt(questions)
 
       console.log(dim('----------------------'))
 
@@ -211,47 +230,43 @@ export const createOrEditModel = async (isEdit: boolean, isPrompt: boolean) => {
         type: 'confirm',
         name: 'hasPrompt',
         message: 'Would you like to add a prompt to this model?',
-        default: true,
+        default: !model || !!model.promptTemplate,
       })
 
       console.log(dim('----------------------'))
 
-      if (hasPrompt) {
-        const messages = await createPrompt(model?.parameters.messages)
-
-        parameters = { ...parameters, messages }
-      } else {
-        parameters = { ...parameters, messages: [] }
-      }
-
-      await testingChat(parameters)
-
       if (isDefault) {
-        definedModels = definedModels.map((rest) => ({ ...rest, isDefault: false }))
+        models = models.map((rest) => ({ ...rest, isDefault: false }))
       } else {
-        isDefault ??= !hasDefinedModels || model?.isDefault
+        isDefault ??= !hasModels || model?.isDefault
       }
 
-      model = { id, parameters, isDefault }
+      if (hasPrompt) {
+        const promptTemplate = await createPrompt(model?.promptTemplate)
+
+        model = { id, parameters, isDefault, k, promptTemplate }
+      } else {
+        model = { id, parameters, isDefault, k }
+      }
+
+      await testingChat(model)
     } else {
       if (!model) return
 
-      const messages = await createPrompt(model.parameters.messages)
+      const promptTemplate = await createPrompt(model.promptTemplate)
 
-      model.parameters = { ...model.parameters, messages }
+      model.promptTemplate = promptTemplate
 
-      await testingChat(model.parameters)
+      await testingChat(model)
     }
 
     if (!isEdit && !isPrompt) {
-      definedModels = [...definedModels, model]
+      models = [...models, model]
     } else {
-      definedModels = definedModels.map((definedModel) =>
-        definedModel.id === model?.id ? model : definedModel,
-      )
+      models = models.map((existModel) => (existModel.id === model?.id ? model : existModel))
     }
 
-    await writeModels(definedModels)
+    await writeModels(models)
   } catch (e) {
     console.error(red(e.message + '\n'))
   }

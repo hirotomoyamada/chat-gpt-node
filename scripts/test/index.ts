@@ -1,44 +1,112 @@
-import ora from 'ora'
-import { openai } from '../../libs/openai'
-import { rl } from '../../libs/readline'
 import dotenv from 'dotenv'
-import { CreateChatCompletionRequest, ChatCompletionRequestMessage } from 'openai'
-import { writeJson, readJson, existsJson } from '../../libs/json'
-import { typingEffect } from '../../libs/utils'
+import { rl } from '../../libs/readline'
+import { red } from 'chalk'
+import { ChatOpenAI } from 'langchain/chat_models/openai'
+import {
+  ChatPromptTemplate,
+  HumanMessagePromptTemplate,
+  MessagesPlaceholder,
+  SystemMessagePromptTemplate,
+} from 'langchain/prompts'
+import { ConversationChain } from 'langchain/chains'
+import { BufferWindowMemory, ChatMessageHistory } from 'langchain/memory'
+import { CallbackManager } from 'langchain/callbacks'
+import {
+  AIChatMessage,
+  HumanChatMessage,
+  MessageType,
+  SystemChatMessage,
+  BaseChatMessage,
+} from 'langchain/schema'
+import { writeJson, existsJson, readJson } from '../../utils/json'
+import { History } from '../../types/openai'
 
-let JSON_PARAMS: Omit<CreateChatCompletionRequest, 'messages' | 'model'> = {}
+dotenv.config()
 
-if (existsJson('parameters')) JSON_PARAMS = readJson('parameters')
-
-delete JSON_PARAMS['messages']
-
-const model = process.argv[2] ?? JSON_PARAMS['model']
+const history: History = existsJson('data', 'history') ? readJson('data', 'history') : []
 
 const main = async () => {
   try {
-    const messages: ChatCompletionRequestMessage[] = [{ role: 'user', content: '' }]
+    const messages: BaseChatMessage[] = []
 
-    // const { data } = await openai.createChatCompletion({
-    //   model,
-    //   messages,
-    //   temperature: 1,
-    //   top_p: 1,
-    //   presence_penalty: 0,
-    //   frequency_penalty: 0,
-    //   ...JSON_PARAMS,
-    // })
-    // console.log(data)
+    for (let message of history) {
+      if (message.type === 'human') {
+        messages.push(new HumanChatMessage(message.text))
+      } else if (message.type === 'ai') {
+        messages.push(new AIChatMessage(message.text))
+      } else if (message.type === 'system') {
+        messages.push(new SystemChatMessage(message.text))
+      }
+    }
 
-    // const { data: modelsData } = await openai.listModels()
-    const { data: modelData } = await openai.retrieveModel('code-davinci-002')
+    const chatHistory = new ChatMessageHistory(messages)
 
-    // console.log(modelsData)
+    const llm = new ChatOpenAI(
+      {
+        modelName: 'gpt-3.5-turbo',
+        temperature: 0.7,
+        topP: 0.9,
+        presencePenalty: 1,
+        frequencyPenalty: 1,
+        streaming: true,
+        callbackManager: CallbackManager.fromHandlers({
+          handleLLMNewToken: async (token: string) => {
+            process.stdout.write(token)
+          },
+        }),
+      },
+      { organization: process.env.OPENAI_ORGANIZATION, apiKey: process.env.OPENAI_API_KEY },
+    )
 
-    // console.log('-------------')
+    const prompt = ChatPromptTemplate.fromPromptMessages([
+      SystemMessagePromptTemplate.fromTemplate(
+        'あなたの名前はジョンソンです。これから、あなたが発言する文章の語尾には「にゃん」とつけて発言すること。',
+      ),
+      new MessagesPlaceholder('history'),
+      HumanMessagePromptTemplate.fromTemplate('{input}'),
+    ])
 
-    console.log(modelData)
+    const memory = new BufferWindowMemory({
+      returnMessages: true,
+      memoryKey: 'history',
+      chatHistory,
+      k: 5,
+    })
+
+    const chain = new ConversationChain({ memory, prompt, llm })
+
+    rl.setPrompt('> ')
+
+    rl.prompt()
+
+    rl.on('line', async (input) => {
+      try {
+        rl.pause()
+
+        console.log('')
+
+        const res = await chain.call({ input })
+
+        const history: History = []
+
+        for (let { _getType, text } of memory.chatHistory.messages) {
+          history.push({
+            type: _getType(),
+            text: text,
+          })
+        }
+
+        console.log('\n')
+
+        rl.prompt()
+
+        await writeJson('data', 'history')(history)
+      } catch (e) {
+        console.error(red(e))
+      }
+    })
   } catch (e) {
-    console.log(e.message ?? e.response.data.error)
+    console.log(red(e))
   }
 }
 

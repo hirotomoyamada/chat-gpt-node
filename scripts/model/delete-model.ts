@@ -1,27 +1,30 @@
 import { existsJson, readJson } from '../../utils/json'
-import { DefinedModel } from '../../types/model'
+import { DefinedModel } from '../../types/openai'
 import { prompt } from '../../libs/inquirer'
 import { writeModels } from './write-models'
 import { red } from 'chalk'
+import { pkgManagerName } from '../../utils/command'
 
-let definedModels: DefinedModel[] = existsJson('data', 'models') ? readJson('data', 'models') : []
+let models: DefinedModel[] = existsJson('data', 'models') ? readJson('data', 'models') : []
 
-const hasDefinedModels: boolean = !!definedModels.length
+const hasModels: boolean = !!models.length
 
 export const deleteModel = async () => {
   try {
-    if (!hasDefinedModels)
-      throw new Error('Model does not exist. Please run "pnpm model --create" to create the model.')
+    if (!hasModels)
+      throw new Error(
+        `Model does not exist. Please run "${pkgManagerName} model --create" to create the model.`,
+      )
 
     let targetIds = process.argv.slice(3)
 
     if (!targetIds.length) {
-      const { targetIds: answerTargetIds } = await prompt({
+      const { selectedTargetIds } = await prompt({
         type: 'checkbox',
-        name: 'targetIds',
+        name: 'selectedTargetIds',
         message: 'Please select the model to edit',
         suffix: ':',
-        choices: definedModels.map(({ id }) => id),
+        choices: models.map(({ id }) => id),
         validate: (input) => {
           if (!input.length) {
             return 'Please select'
@@ -31,7 +34,7 @@ export const deleteModel = async () => {
         },
       })
 
-      targetIds = answerTargetIds
+      targetIds = selectedTargetIds
     }
 
     const { isConfirm } = await prompt({
@@ -46,14 +49,14 @@ export const deleteModel = async () => {
     if (!isConfirm) return
 
     for (const targetId of targetIds) {
-      const targetModel = definedModels.find(({ id }) => id === targetId)
+      const targetModel = models.find(({ id }) => id === targetId)
 
       if (!targetModel) throw new Error(`${targetId} does not exist.`)
 
-      definedModels = definedModels.filter(({ id }) => id !== targetId)
+      models = models.filter(({ id }) => id !== targetId)
     }
 
-    await writeModels(definedModels)
+    await writeModels(models)
   } catch (e) {
     console.error(red(e.message + '\n'))
   }

@@ -1,5 +1,5 @@
 import ora from 'ora'
-import { DefinedModel } from '../../types/model'
+import { DefinedModel } from '../../types/openai'
 import { writeJson } from '../../utils/json'
 import { red, green, dim } from 'chalk'
 
