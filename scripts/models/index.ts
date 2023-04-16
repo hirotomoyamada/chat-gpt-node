@@ -11,6 +11,8 @@ const defaultResult = (models: string[]) =>
 export const main = async () => {
   const command = computedCommnad(['internal', 'remote', 'parameters'])
 
+  console.log('')
+
   const spinner = ora(dim('Getting models for ChatGPT...')).start()
 
   try {

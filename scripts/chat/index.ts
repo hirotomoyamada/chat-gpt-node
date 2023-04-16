@@ -27,6 +27,8 @@ const selectModel = async () => {
 
 const main = async () => {
   try {
+    console.log('')
+
     const { select } = computedCommnad(['select'])
 
     const targetId = process.argv[2]

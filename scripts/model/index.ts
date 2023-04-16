@@ -7,6 +7,8 @@ import { selectModel } from './select-model'
 const main = async () => {
   const command = computedCommnad(['create', 'delete', 'edit', 'prompt', 'select'])
 
+  console.log('')
+
   if (command.create || command.edit || command.prompt) {
     createOrEditModel(command.edit, command.prompt)
   } else if (command.delete) {
