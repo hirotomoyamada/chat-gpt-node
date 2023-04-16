@@ -1,6 +1,6 @@
 import ora from 'ora'
 import { openai } from '../../libs/openai'
-import { red, green, dim, cyan } from 'chalk'
+import { red, green, dim, cyan, yellow } from 'chalk'
 import { computedCommnad, pkgManagerName } from '../../utils/command'
 import { existsJson, readJson } from '../../utils/json'
 import { DefinedModel, InternalModel } from '../../types/openai'
@@ -33,12 +33,16 @@ export const main = async () => {
 
       if (data.length) {
         if (!command.parameters) {
-          const models: string[] = data.map(({ id }) => id)
+          const models: string[] = data.map(
+            ({ id, isDefault }) => id + (isDefault ? yellow(' (default)') : ''),
+          )
 
           result = defaultResult(models)
         } else {
-          const models = data.map(({ id, parameters, promptTemplate, k }, i) => {
-            let result = `\n${(i + 1).toString().padStart(2, '0')}. ${id}\n`
+          const models = data.map(({ id, parameters, promptTemplate, k, isDefault }, i) => {
+            let result = `\n${(i + 1).toString().padStart(2, '0')}. ${id} ${
+              isDefault ? yellow('(default)') : ''
+            }\n`
 
             result += `model: ${cyan(parameters.modelName)}\n`
             result += `max_tokens: ${cyan(parameters.maxTokens)}\n`

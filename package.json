@@ -8,12 +8,9 @@
   "author": "hirotomoyamada <hirotomo.yamada@avap.co.jp>",
   "scripts": {
     "format": "prettier --write .",
-    "setting": "tsx scripts/setting",
     "chat": "tsx scripts/chat",
     "model": "tsx scripts/model",
-    "models": "tsx scripts/models",
-    "reset": "tsx scripts/reset",
-    "test": "tsx scripts/test"
+    "models": "tsx scripts/models"
   },
   "dependencies": {
     "chalk": "4.1.2",
