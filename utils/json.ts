@@ -5,31 +5,34 @@ import { prettier } from '../libs/prettier'
 
 const writeFileAsync = promisify(writeFile)
 
-export const JSON_DIR_PATH = (dirName: string) => path.join(process.cwd(), dirName)
-export const JSON_FILE_PATH = (dirName: string, fileName: string) =>
-  path.join(process.cwd(), dirName, `${fileName}.json`)
+export const JSON_DIR_PATH = (...pathName: string[]) => path.join(process.cwd(), ...pathName)
+export const JSON_FILE_PATH = (...pathName: string[]) =>
+  path.join(process.cwd(), ...pathName.slice(0, -1), `${pathName[pathName.length - 1]}.json`)
 
-export const existsJsonDir = (dirName: string) => existsSync(JSON_DIR_PATH(dirName))
+export const existsJsonDir = (...pathName: string[]) => existsSync(JSON_DIR_PATH(...pathName))
 
-export const writeJson = async (dirName: string, fileName: string, data: any): Promise<void> => {
+export const writeJson =
+  (...pathName: string[]) =>
+  async (data: any): Promise<void> => {
+    try {
+      if (!existsJsonDir(...pathName.slice(0, -1)))
+        mkdirSync(JSON_DIR_PATH(...pathName.slice(0, -1)))
+
+      const formattedData = await prettier(JSON.stringify(data))
+
+      await writeFileAsync(JSON_FILE_PATH(...pathName), formattedData, 'utf8')
+    } catch (e) {
+      throw new Error(e.message)
+    }
+  }
+
+export const readJson = (...pathName: string[]): any => {
   try {
-    if (!existsJsonDir(dirName)) mkdirSync(JSON_DIR_PATH(dirName))
-
-    const formattedData = await prettier(JSON.stringify(data))
-
-    await writeFileAsync(JSON_FILE_PATH(dirName, fileName), formattedData, 'utf8')
+    return JSON.parse(readFileSync(JSON_FILE_PATH(...pathName), 'utf8'))
   } catch (e) {
     throw new Error(e.message)
   }
 }
 
-export const readJson = (dirName: string, fileName: string): any => {
-  try {
-    return JSON.parse(readFileSync(JSON_FILE_PATH(dirName, fileName), 'utf8'))
-  } catch (e) {
-    throw new Error(e.message)
-  }
-}
-
-export const existsJson = (dirName: string, fileName: string): boolean =>
-  existsSync(JSON_FILE_PATH(dirName, fileName))
+export const existsJson = (...pathName: string[]): boolean =>
+  existsSync(JSON_FILE_PATH(...pathName))

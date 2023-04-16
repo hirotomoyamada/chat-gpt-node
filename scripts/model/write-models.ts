@@ -7,7 +7,7 @@ export const writeModels = async (data: DefinedModel[]) => {
   const spinner = ora(dim('Initializing the model...\n')).start()
 
   try {
-    await writeJson('data', 'models', data)
+    await writeJson('data', 'models')(data)
 
     spinner.succeed(green(`Successfully configured the model.\n`))
   } catch (e) {
