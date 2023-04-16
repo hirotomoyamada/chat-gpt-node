@@ -66,7 +66,7 @@ $ pnpm models -i
 $ pnpm models --remote
 $ pnpm models -r
 
-# Start a chat. Model to be used is the default
+# Start a chat. Model to be used is the default.
 $ pnpm chat
 
 # Select a model and start the chat.
@@ -75,4 +75,11 @@ $ pnpm chat -s
 
 # Specify the model and start a chat
 $ pnpm chat [model-name]
+
+# Delete conversation history of models.
+$ pnpm history
+
+# Delete conversation history of all models.
+$ pnpm history --all
+$ pnpm history -a
 ```
