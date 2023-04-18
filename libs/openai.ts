@@ -21,12 +21,17 @@ import { Configuration, ConfigurationParameters, OpenAIApi } from 'openai'
 
 dotenv.config()
 
-const configuration = new Configuration({
+export const configuration: ConfigurationParameters = {
   organization: process.env.OPENAI_ORGANIZATION,
   apiKey: process.env.OPENAI_API_KEY,
-})
+}
 
-export const openai = new OpenAIApi(configuration)
+export const openai = new OpenAIApi(
+  new Configuration({
+    organization: process.env.OPENAI_ORGANIZATION,
+    apiKey: process.env.OPENAI_API_KEY,
+  }),
+)
 
 export const conversationChain = ({
   parameters,
@@ -35,17 +40,12 @@ export const conversationChain = ({
   chatHistory,
   callbackManager,
 }: {
-  parameters: ModelParameters
+  parameters?: ModelParameters
   promptTemplate?: string
   k?: number
   chatHistory?: ChatMessageHistory
   callbackManager?: (token: string) => void
 }): ConversationChain => {
-  const configuration: ConfigurationParameters = {
-    organization: process.env.OPENAI_ORGANIZATION,
-    apiKey: process.env.OPENAI_API_KEY,
-  }
-
   const llm = new ChatOpenAI(
     {
       ...parameters,
