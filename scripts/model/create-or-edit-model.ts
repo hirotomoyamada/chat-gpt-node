@@ -224,6 +224,8 @@ export const createOrEditModel = async (isEdit: boolean, isPrompt: boolean) => {
 
       let { id, parameters, isDefault, k } = await prompt(questions)
 
+      k = parseFloat(k)
+
       console.log(dim('----------------------'))
 
       const { hasPrompt } = await prompt({
