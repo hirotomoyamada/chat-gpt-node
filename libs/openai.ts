@@ -26,12 +26,7 @@ export const configuration: ConfigurationParameters = {
   apiKey: process.env.OPENAI_API_KEY,
 }
 
-export const openai = new OpenAIApi(
-  new Configuration({
-    organization: process.env.OPENAI_ORGANIZATION,
-    apiKey: process.env.OPENAI_API_KEY,
-  }),
-)
+export const openai = new OpenAIApi(new Configuration(configuration))
 
 export const conversationChain = ({
   parameters,
