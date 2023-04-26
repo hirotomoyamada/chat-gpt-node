@@ -1,20 +1,13 @@
 import { ChatOpenAI } from 'langchain/chat_models/openai'
 import { MessageType } from 'langchain/schema'
+import { CreateChatCompletionRequest } from 'openai'
 
-export type ModelParameters = {
-  modelName: ChatOpenAI['modelName']
-  temperature: ChatOpenAI['temperature']
-  topP: ChatOpenAI['topP']
-  presencePenalty: ChatOpenAI['presencePenalty']
-  frequencyPenalty: ChatOpenAI['frequencyPenalty']
-  maxTokens?: ChatOpenAI['maxTokens']
-}
+export type ModelParameters = Omit<CreateChatCompletionRequest, 'messages'>
 
 export type DefinedModel = {
   id: string
   parameters: ModelParameters
   isDefault: boolean
-  k?: number
   promptTemplate?: string
 }
 

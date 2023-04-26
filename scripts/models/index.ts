@@ -41,18 +41,17 @@ export const main = async () => {
 
           result = defaultResult(models)
         } else {
-          const models = data.map(({ id, parameters, promptTemplate, k, isDefault }, i) => {
+          const models = data.map(({ id, parameters, promptTemplate, isDefault }, i) => {
             let result = `\n${(i + 1).toString().padStart(2, '0')}. ${id} ${
               isDefault ? yellow('(default)') : ''
             }\n`
 
-            result += `model: ${cyan(parameters.modelName)}\n`
-            result += `max_tokens: ${cyan(parameters.maxTokens)}\n`
+            result += `model: ${cyan(parameters.model)}\n`
+            result += `max_tokens: ${cyan(parameters.max_tokens)}\n`
             result += `temperature: ${cyan(parameters.temperature)}\n`
-            result += `top_p: ${cyan(parameters.topP)}\n`
-            result += `presence_penalty: ${cyan(parameters.presencePenalty)}\n`
-            result += `frequency_penalty: ${cyan(parameters.frequencyPenalty)}\n`
-            result += `history_limit: ${cyan(k ?? '')}\n`
+            result += `top_p: ${cyan(parameters.top_p)}\n`
+            result += `presence_penalty: ${cyan(parameters.presence_penalty)}\n`
+            result += `frequency_penalty: ${cyan(parameters.frequency_penalty)}\n`
             result += `prompt: ${promptTemplate ? '\n' + cyan(promptTemplate.trim()) : ''}\n`
 
             return result

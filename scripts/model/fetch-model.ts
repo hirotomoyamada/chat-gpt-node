@@ -21,20 +21,19 @@ export const fetchModel = () => {
         `Default　Model does not exist. Please run "${pkgManagerName} model --select" to select the model.`,
       )
 
-    const { id, parameters, promptTemplate = '', k } = defaultModel
+    const { id, parameters, promptTemplate = '' } = defaultModel
 
     console.log('Model that is currently set as the default.')
 
     console.log(dim('----------------------'))
 
     console.log(`name: ${cyan(id)}`)
-    console.log(`model: ${cyan(parameters.modelName)}`)
-    console.log(`max_tokens: ${cyan(parameters.maxTokens)}`)
+    console.log(`model: ${cyan(parameters.model)}`)
+    console.log(`max_tokens: ${cyan(parameters.max_tokens)}`)
     console.log(`temperature: ${cyan(parameters.temperature)}`)
-    console.log(`top_p: ${cyan(parameters.topP)}`)
-    console.log(`presence_penalty: ${cyan(parameters.presencePenalty)}`)
-    console.log(`frequency_penalty: ${cyan(parameters.frequencyPenalty)}`)
-    console.log(`history_limit: ${cyan(k ?? '')}`)
+    console.log(`top_p: ${cyan(parameters.top_p)}`)
+    console.log(`presence_penalty: ${cyan(parameters.presence_penalty)}`)
+    console.log(`frequency_penalty: ${cyan(parameters.frequency_penalty)}`)
     console.log(`prompt: ${promptTemplate ? '\n' + cyan(promptTemplate.trim()) : ''}`)
 
     console.log(dim('----------------------'))

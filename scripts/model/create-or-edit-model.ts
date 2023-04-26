@@ -52,8 +52,8 @@ export const createOrEditModel = async (isEdit: boolean, isPrompt: boolean) => {
     if (!isPrompt) {
       const internalModels = await fetchModels()
 
-      const getMaxTokens = (selectedModelName: string) =>
-        internalModels.find(({ id }) => id === selectedModelName)?.maxTokens ?? 0
+      const getMaxTokens = (selectedId: string) =>
+        internalModels.find(({ id }) => id === selectedId)?.maxTokens ?? 0
 
       console.log('\nPlease enter the model name and parameters.\n')
 
@@ -78,20 +78,20 @@ export const createOrEditModel = async (isEdit: boolean, isPrompt: boolean) => {
         },
         {
           type: 'list',
-          name: 'parameters.modelName',
+          name: 'parameters.model',
           message: 'model',
           suffix: ':',
-          default: model?.parameters.modelName,
+          default: model?.parameters.model,
           choices: internalModels.map(({ id }) => id),
         },
         {
           type: 'input',
-          name: 'parameters.maxTokens',
+          name: 'parameters.max_tokens',
           message: ({ parameters }) =>
-            `max_tokens ${dim(`(min: 1, max: ${getMaxTokens(parameters.modelName)})`)}`,
+            `max_tokens ${dim(`(min: 1, max: ${getMaxTokens(parameters.model)})`)}`,
           suffix: ':',
           default: ({ parameters }) =>
-            model?.parameters.maxTokens ?? getMaxTokens(parameters.modelName) / 4,
+            model?.parameters.max_tokens ?? getMaxTokens(parameters.model) / 4,
           validate: (input, { parameters }) => {
             input = parseFloat(input)
 
@@ -100,10 +100,10 @@ export const createOrEditModel = async (isEdit: boolean, isPrompt: boolean) => {
             } else {
               if (input < 1) return 'Please enter a value greater than or equal to 1.'
 
-              const maxTokens = getMaxTokens(parameters.modelName)
+              const max_tokens = getMaxTokens(parameters.model)
 
-              if (maxTokens < input) {
-                return `The maximum value that can be entered is ${maxTokens}.`
+              if (max_tokens < input) {
+                return `The maximum value that can be entered is ${max_tokens}.`
               } else {
                 return true
               }
@@ -115,7 +115,7 @@ export const createOrEditModel = async (isEdit: boolean, isPrompt: boolean) => {
           name: 'parameters.temperature',
           message: `temperature ${dim(`(min: 0, max: 2)`)}`,
           suffix: ':',
-          default: model?.parameters.temperature ?? 1,
+          default: model?.parameters.temperature ?? 0.7,
           validate: (input) => {
             input = parseFloat(input)
 
@@ -132,10 +132,10 @@ export const createOrEditModel = async (isEdit: boolean, isPrompt: boolean) => {
         },
         {
           type: 'input',
-          name: 'parameters.topP',
+          name: 'parameters.top_p',
           message: `top_p ${dim(`(min: 0, max: 1)`)}`,
           suffix: ':',
-          default: model?.parameters.topP ?? 1,
+          default: model?.parameters.top_p ?? 0.95,
           validate: (input) => {
             input = parseFloat(input)
 
@@ -152,10 +152,10 @@ export const createOrEditModel = async (isEdit: boolean, isPrompt: boolean) => {
         },
         {
           type: 'input',
-          name: 'parameters.presencePenalty',
+          name: 'parameters.presence_penalty',
           message: `presence_penalty ${dim(`(min: -2, max: 2)`)}`,
           suffix: ':',
-          default: model?.parameters.presencePenalty ?? 0,
+          default: model?.parameters.presence_penalty ?? 0,
           validate: (input) => {
             input = parseFloat(input)
 
@@ -172,10 +172,10 @@ export const createOrEditModel = async (isEdit: boolean, isPrompt: boolean) => {
         },
         {
           type: 'input',
-          name: 'parameters.frequencyPenalty',
+          name: 'parameters.frequency_penalty',
           message: `frequency_penalty ${dim(`(min: -2, max: 2)`)}`,
           suffix: ':',
-          default: model?.parameters.frequencyPenalty ?? 0,
+          default: model?.parameters.frequency_penalty ?? 0,
           validate: (input) => {
             input = parseFloat(input)
 
@@ -185,24 +185,6 @@ export const createOrEditModel = async (isEdit: boolean, isPrompt: boolean) => {
               if (input < -2) return 'Please enter a value greater than or equal to -2.'
 
               if (2 < input) return 'Please enter a value that is 2 or less.'
-
-              return true
-            }
-          },
-        },
-        {
-          type: 'input',
-          name: 'k',
-          message: `history_limit ${dim(`(min: 1, max: 99999)`)}`,
-          suffix: ':',
-          default: model?.k ?? 10,
-          validate: (input) => {
-            input = parseFloat(input)
-
-            if (isNaN(input)) {
-              return 'Please input a number value.'
-            } else {
-              if (input < 1) return 'Please enter a value greater than or equal to 1.'
 
               return true
             }
@@ -222,9 +204,7 @@ export const createOrEditModel = async (isEdit: boolean, isPrompt: boolean) => {
         ]
       }
 
-      let { id, parameters, isDefault, k } = await prompt(questions)
-
-      k = parseFloat(k)
+      let { id, parameters, isDefault } = await prompt(questions)
 
       console.log(dim('----------------------'))
 
@@ -246,9 +226,9 @@ export const createOrEditModel = async (isEdit: boolean, isPrompt: boolean) => {
       if (hasPrompt) {
         const promptTemplate = await createPrompt(model?.promptTemplate)
 
-        model = { id, parameters, isDefault, k, promptTemplate }
+        model = { id, parameters, isDefault, promptTemplate }
       } else {
-        model = { id, parameters, isDefault, k }
+        model = { id, parameters, isDefault }
       }
 
       await testingChat(model)

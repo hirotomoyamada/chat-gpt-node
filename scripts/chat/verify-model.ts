@@ -6,12 +6,12 @@ import { red, green, dim } from 'chalk'
 export const verifyModel = async ({ parameters }: DefinedModel) => {
   const spinner = ora('Setting model for ChatGPT...').start()
 
-  const { modelName } = parameters
+  const { model } = parameters
 
   try {
-    await openai.retrieveModel(modelName)
+    await openai.retrieveModel(model)
 
-    spinner.succeed(green(`Successfully configured the model.`) + dim(`\n\nmodel: ${modelName}\n`))
+    spinner.succeed(green(`Successfully configured the model.`) + dim(`\n\nmodel: ${model}\n`))
 
     return true
   } catch (e) {

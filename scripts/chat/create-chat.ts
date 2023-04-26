@@ -1,7 +1,7 @@
 import { DefinedModel } from '../../types/openai'
-import { red, dim } from 'chalk'
+import { red, dim, cyan } from 'chalk'
 import { verifyModel } from './verify-model'
-import { conversationChain, computedChatHistory, saveChatHistory } from '../../libs/openai'
+import { computedMessages, createChatCompletion, getMessages, putMessages } from '../../libs/openai'
 import * as readline from 'readline'
 import ora from 'ora'
 
@@ -13,19 +13,11 @@ export const createChat = async (model: DefinedModel) => {
 
     const spinner = ora(dim('...'))
 
-    const { id, parameters, k, promptTemplate } = model
+    const { id, parameters, promptTemplate } = model
 
-    const chatHistory = computedChatHistory(id)
+    let messages = getMessages(id, 10)
 
-    const chain = conversationChain({
-      parameters,
-      k,
-      promptTemplate,
-      chatHistory,
-      callbackManager: () => {
-        spinner.stop()
-      },
-    })
+    if (promptTemplate) messages = [{ role: 'system', content: promptTemplate }, ...messages]
 
     const rl = readline.createInterface({
       input: process.stdin,
@@ -36,7 +28,7 @@ export const createChat = async (model: DefinedModel) => {
 
     rl.prompt()
 
-    rl.on('line', async (input) => {
+    rl.on('line', async (content) => {
       console.log('')
 
       spinner.start()
@@ -44,17 +36,29 @@ export const createChat = async (model: DefinedModel) => {
       try {
         rl.pause()
 
-        await chain.call({ input })
+        await createChatCompletion({
+          content,
+          parameters,
+          messages,
+          onStream: (token) => {
+            spinner.stop()
+
+            process.stdout.write(cyan(token))
+          },
+          onCompleted: async (messages) => {
+            const [, targetMessages] = computedMessages(messages)
+
+            await putMessages(id, targetMessages)
+          },
+        })
 
         console.log('\n')
 
         rl.prompt()
-
-        await saveChatHistory(id, chain)
-      } catch (e) {
+      } catch (e: any) {
         spinner.stop()
 
-        console.error(red(e))
+        throw new Error(e.message)
       }
     })
   } catch (e) {

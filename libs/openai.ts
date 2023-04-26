@@ -1,23 +1,15 @@
 import dotenv from 'dotenv'
 import { existsJson, readJson, writeJson } from '../utils/json'
-import { BufferWindowMemory, ChatMessageHistory } from 'langchain/memory'
 import {
-  AIChatMessage,
-  BaseChatMessage,
-  HumanChatMessage,
-  SystemChatMessage,
-} from 'langchain/schema'
-import { History, ModelParameters } from '../types/openai'
-import { ChatOpenAI } from 'langchain/chat_models/openai'
-import { CallbackManager } from 'langchain/callbacks'
-import { ConversationChain } from 'langchain/chains'
-import {
-  ChatPromptTemplate,
-  HumanMessagePromptTemplate,
-  MessagesPlaceholder,
-  SystemMessagePromptTemplate,
-} from 'langchain/prompts'
-import { Configuration, ConfigurationParameters, OpenAIApi } from 'openai'
+  ChatCompletionRequestMessage,
+  Configuration,
+  ConfigurationParameters,
+  CreateChatCompletionRequest,
+  CreateChatCompletionResponse,
+  OpenAIApi,
+} from 'openai'
+import { IncomingMessage } from 'http'
+import { ModelParameters } from '../types/openai'
 
 dotenv.config()
 
@@ -28,76 +20,115 @@ export const configuration: ConfigurationParameters = {
 
 export const openai = new OpenAIApi(new Configuration(configuration))
 
-export const conversationChain = ({
+export const createChatCompletion = async ({
+  content,
   parameters,
-  k,
-  promptTemplate,
-  chatHistory,
-  callbackManager,
+  messages,
+  onStream,
+  onCompleted,
 }: {
-  parameters?: ModelParameters
-  promptTemplate?: string
-  k?: number
-  chatHistory?: ChatMessageHistory
-  callbackManager?: (token: string) => void
-}): ConversationChain => {
-  const llm = new ChatOpenAI(
-    {
-      ...parameters,
-      streaming: true,
-      callbackManager: CallbackManager.fromHandlers({
-        handleLLMNewToken: async (token: string) => {
-          process.stdout.write(token)
+  content: string
+  parameters: ModelParameters
+  messages: ChatCompletionRequestMessage[]
+  onStream?: (token: string) => void
+  onCompleted?: (messages: ChatCompletionRequestMessage[]) => void | Promise<void>
+}) => {
+  const userMessage: ChatCompletionRequestMessage = { role: 'user', content }
 
-          callbackManager?.(token)
-        },
-      }),
-    },
-    configuration,
-  )
+  messages.push(userMessage)
 
-  const prompt = ChatPromptTemplate.fromPromptMessages([
-    SystemMessagePromptTemplate.fromTemplate(promptTemplate ?? ''),
-    new MessagesPlaceholder('history'),
-    HumanMessagePromptTemplate.fromTemplate('{input}'),
-  ])
+  try {
+    const { data } = await recursivelyCreateChatCompletion(parameters, messages)
 
-  const memory = new BufferWindowMemory({
-    returnMessages: true,
-    memoryKey: 'history',
-    chatHistory,
-    k,
-  })
+    const assistantMessage: ChatCompletionRequestMessage = { role: 'assistant', content: '' }
 
-  return new ConversationChain({ memory, prompt, llm })
+    for await (let chunk of data as unknown as IncomingMessage) {
+      chunk = chunk.toString('utf8').split('\n')
+
+      chunk = chunk.filter((line: string) => line.trim().startsWith('data: '))
+
+      for (let data of chunk) {
+        data = data.replace(/^data: /, '')
+
+        if (data === '[DONE]') break
+
+        const { choices } = JSON.parse(data)
+
+        const token: string | undefined = choices[0].delta.content
+
+        if (token) {
+          assistantMessage.content += token
+
+          onStream?.(token)
+        }
+      }
+    }
+
+    messages.push(assistantMessage)
+
+    await onCompleted?.([userMessage, assistantMessage])
+  } catch (e) {
+    console.log(e.response)
+  }
 }
 
-export const computedChatHistory = (id: string): ChatMessageHistory => {
-  const history: History = existsJson('data', 'history', id) ? readJson('data', 'history', id) : []
+const recursivelyCreateChatCompletion = async (
+  parameters: ModelParameters,
+  messages: ChatCompletionRequestMessage[],
+  k = 10,
+): Promise<{ data: CreateChatCompletionResponse }> => {
+  if (k < 0) k = 0
 
-  let chatMessages: BaseChatMessage[] = []
+  let [systemMessages, otherMessages] = computedMessages(messages)
 
-  for (const { type, text } of history) {
-    if (type === 'human') {
-      chatMessages = [...chatMessages, new HumanChatMessage(text)]
-    } else if (type === 'ai') {
-      chatMessages = [...chatMessages, new AIChatMessage(text)]
-    } else if (type === 'system') {
-      chatMessages = [...chatMessages, new SystemChatMessage(text)]
+  otherMessages = otherMessages.slice(-1 * k)
+
+  messages = [...systemMessages, ...otherMessages]
+
+  try {
+    const { data } = await openai.createChatCompletion(
+      { ...parameters, messages, stream: true },
+      { responseType: 'stream' },
+    )
+
+    return { data }
+  } catch (e: any) {
+    if (otherMessages.length) {
+      return await recursivelyCreateChatCompletion(parameters, messages, k - 1)
+    } else {
+      throw new Error(e.message)
     }
   }
-
-  return new ChatMessageHistory(chatMessages)
 }
 
-export const saveChatHistory = async (id: string, chain: ConversationChain): Promise<void> => {
-  let history: History = []
+export const computedMessages = (messages: ChatCompletionRequestMessage[]) => {
+  let systemMessages: ChatCompletionRequestMessage[] = []
+  let otherMessages: ChatCompletionRequestMessage[] = []
 
-  const { messages } = (chain.memory as BufferWindowMemory).chatHistory
+  messages.forEach((message) => {
+    if (message.role === 'system') {
+      systemMessages = [...systemMessages, message]
+    } else {
+      otherMessages = [...otherMessages, message]
+    }
+  })
 
-  for (const { _getType, text } of messages) {
-    history = [...history, { type: _getType(), text }]
-  }
+  return [systemMessages, otherMessages]
+}
 
-  await writeJson('data', 'history', id)(history)
+export const getMessages = (id: string, k?: number): ChatCompletionRequestMessage[] => {
+  let messages: ChatCompletionRequestMessage[] = existsJson('data', 'history', id)
+    ? readJson('data', 'history', id)
+    : []
+
+  if (typeof k === 'number') messages = messages.slice(-1 * k)
+
+  return messages
+}
+
+export const putMessages = async (
+  id: string,
+  messages: ChatCompletionRequestMessage[],
+): Promise<void> => {
+  await writeJson('data', 'history', id)([...getMessages(id), ...messages])
 }
