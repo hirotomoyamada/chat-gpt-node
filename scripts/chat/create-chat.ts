@@ -29,6 +29,14 @@ export const createChat = async (model: DefinedModel) => {
     rl.prompt()
 
     rl.on('line', async (content) => {
+      if (content === 'c') {
+        console.clear()
+
+        rl.prompt()
+
+        return
+      }
+
       console.log('')
 
       spinner.start()
